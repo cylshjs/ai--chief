@@ -4,8 +4,21 @@ import { ElMessage, ElScrollbar } from 'element-plus'
 import type { UploadFile } from 'element-plus'
 import { Delete, Picture, Plus, Promotion, VideoPause } from '@element-plus/icons-vue'
 import { useChatStore } from '@/stores/chat'
+import { marked } from 'marked'
+import DOMPurify from 'dompurify'
 
 const chat = useChatStore()
+
+/**
+ * agent 输出的是 Markdown，用 {{ }} 插值会原样显示成带 ## 和 | 的纯文本。
+ *
+ * 必须过 DOMPurify：内容里混着 Tavily 搜来的网页文本，可能带 <script>
+ * 或 <img onerror>，直接 v-html 就是一条 XSS 路径。
+ * 只用于 assistant 消息 —— 用户自己发的仍旧文本插值，否则他打的 * 会变斜体。
+ */
+function render(text: string) {
+  return DOMPurify.sanitize(marked.parse(text) as string)
+}
 const draft = ref('')
 const picked = ref<File | null>(null)
 const pickedName = ref('')
@@ -63,7 +76,9 @@ async function clear() {
       <el-empty v-if="!chat.messages.length" description="拍张冰箱照片，或者直接报菜名" />
       <div v-for="(m, i) in chat.messages" :key="i" class="row" :class="m.role">
         <el-avatar :size="32" class="who">{{ m.role === 'user' ? '我' : '厨' }}</el-avatar>
-        <div class="bubble">{{ m.content || '…' }}</div>
+        <!-- assistant 走 Markdown 渲染，user 保持纯文本 -->
+        <div v-if="m.role === 'assistant'" class="bubble" v-html="render(m.content || '…')" />
+        <div v-else class="bubble">{{ m.content || '…' }}</div>
       </div>
     </el-scrollbar>
 
@@ -135,12 +150,62 @@ async function clear() {
   padding: 0.55rem 0.85rem;
   border-radius: 10px;
   background: var(--el-fill-color-light);
-  white-space: pre-wrap;
   word-break: break-word;
 }
 .row.user .bubble {
+  /* 只给用户消息保留换行：assistant 是渲染后的 HTML，pre-wrap 会带出一堆空行 */
+  white-space: pre-wrap;
   background: var(--el-color-primary);
   color: #fff;
+}
+/* v-html 注入的节点没有 scoped 的 data 属性，够不着，必须走 :deep() */
+.bubble :deep(p) {
+  margin: 0.4rem 0;
+}
+.bubble :deep(p:first-child) {
+  margin-top: 0;
+}
+.bubble :deep(p:last-child) {
+  margin-bottom: 0;
+}
+.bubble :deep(img) {
+  max-width: 100%;
+  border-radius: 6px;
+}
+.bubble :deep(table) {
+  border-collapse: collapse;
+  margin: 0.5rem 0;
+  font-size: 0.9em;
+}
+.bubble :deep(th),
+.bubble :deep(td) {
+  border: 1px solid var(--el-border-color);
+  padding: 0.25rem 0.5rem;
+}
+.bubble :deep(th) {
+  background: var(--el-fill-color);
+}
+.bubble :deep(h1),
+.bubble :deep(h2),
+.bubble :deep(h3) {
+  font-size: 1.05em;
+  margin: 0.6rem 0 0.3rem;
+}
+.bubble :deep(ul),
+.bubble :deep(ol) {
+  margin: 0.4rem 0;
+  padding-left: 1.2rem;
+}
+.bubble :deep(code) {
+  background: var(--el-fill-color);
+  padding: 0.05rem 0.3rem;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+.bubble :deep(hr) {
+  border: none;
+  border-top: 1px solid var(--el-border-color);
+  margin: 0.6rem 0;
 }
 .composer {
   display: flex;
