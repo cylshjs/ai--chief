@@ -3,7 +3,6 @@ import os
 from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi.middleware.cors import CORSMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from app.api.v1 import chat
 from app.api.v1 import oss
@@ -18,27 +17,20 @@ app = FastAPI(
     version="0.1.0"
 )
 
-# 1. 配置跨域资源共享 (CORS)
-# 插件开发中，由于请求来自浏览器扩展环境，必须正确配置 CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # 生产环境建议指定插件的 ID 或具体域名
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# 注：不需要 CORS。开发期 Vite 把 /api 代理到 8001（见 frontend/vite.config.ts），
+# 生产期前端由下面这个进程的 StaticFiles 托管 —— 两种情况浏览器看到的都是同源请求。
 
-# 2.挂载路由
+# 1.挂载路由
 app.include_router(chat.router, prefix="/api/v1", tags=["对话"])
 app.include_router(oss.router, prefix="/api/v1", tags=["申请上传签名url"])
 
-# 3.挂载前端资源（Vue 构建产物，输出目录见 frontend/vite.config.ts 的 build.outDir）
+# 2.挂载前端资源（Vue 构建产物，输出目录见 frontend/vite.config.ts 的 build.outDir）
 static_dir = os.path.join(os.path.dirname(__file__), "static")
 if os.path.exists(static_dir):
     app.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
 
 
-# 4.SPA fallback：静态文件没命中就回 index.html，交给 vue-router 处理前端路由
+# 3.SPA fallback：静态文件没命中就回 index.html，交给 vue-router 处理前端路由
 # 注意：Starlette 按注册顺序匹配，挂在 "/" 的 StaticFiles 会吞掉之后注册的所有路由，
 # 所以这里用 404 异常处理器，而不是再写一个 catch-all 路由
 @app.exception_handler(StarletteHTTPException)
@@ -57,7 +49,7 @@ async def spa_fallback(request: Request, exc: StarletteHTTPException):
     return JSONResponse({"detail": exc.detail}, status_code=exc.status_code)
 
 
-# 5.缓存策略：index.html 每次回源校验，带哈希的 assets 长期缓存
+# 4.缓存策略：index.html 每次回源校验，带哈希的 assets 长期缓存
 @app.middleware("http")
 async def cache_headers(request: Request, call_next):
     response = await call_next(request)
