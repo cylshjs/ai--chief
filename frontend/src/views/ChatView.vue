@@ -179,7 +179,10 @@ async function clear() {
   margin-bottom: 0;
 }
 .bubble :deep(img) {
-  max-width: 100%;
+  /* 菜谱参考图是辅助信息，别撑满整个气泡。宽高都给上限，
+     两个都写时浏览器会按比例缩到同时满足，不会拉变形 */
+  max-width: min(100%, 240px);
+  max-height: 180px;
   border-radius: 6px;
 }
 .bubble :deep(table) {
