@@ -2,6 +2,16 @@
 
 拍一张冰箱照片，或者直接报出食材，agent 联网搜菜谱 → 按营养和难度打分排序 → 给出带参考图的建议。
 
+![界面截图](docs/screenshot.png)
+
+## 亮点
+
+- **Agent 编排**：LangGraph `create_agent` 把 qwen 多模态模型和 Tavily 联网搜索串成一条链路，从食材照片识别一路走到带参考图的方案输出；系统提示词里约束了"搜索不到才允许自己发挥"。
+- **多轮会话持久化**：用 LangGraph 的 `SqliteSaver` checkpoint 存会话状态，按 `thread_id` 一维定位，服务重启历史不丢，删一条记录即清空整个会话。
+- **流式输出**：后端 `StreamingResponse` 边生成边吐文本，前端读 `res.body` 增量渲染。注意这**不是标准 SSE**，原因见文末「一些实现说明」。
+- **图片不占后端带宽**：前端取 OSS 签名后直传，后端只负责签发；上传路径由服务端生成（`uploads/{uuid}.{ext}`），客户端传什么文件名都进不了最终 key。
+- **单端口部署**：`npm run build` 直接产出到 `app/static`，FastAPI 一个进程同时托管 API 和前端页面，不用起两个服务。
+
 ## 技术栈
 
 | 层 | 用了什么 |
