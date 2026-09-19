@@ -1,0 +1,25 @@
+/*
+ * 全局样式。改主题色/圆角这类全局观感只动这里，不要跑去覆盖 .el-button 的具体样式。
+ * Element Plus 把设计变量暴露成了 CSS 变量，直接改变量最省事。
+ */
+:root {
+  --el-color-primary: #e8590c;
+  /* 浅色梯度 Element Plus 不会自动推导，hover / disabled / 浅背景要用到，得一起给 */
+  --el-color-primary-light-3: #ed7a3a;
+  --el-color-primary-light-5: #f29c6b;
+  --el-color-primary-light-7: #f7bd9c;
+  --el-color-primary-light-8: #f9ceb4;
+  --el-color-primary-light-9: #fce7da;
+  --el-color-primary-dark-2: #c94a09;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: system-ui, -apple-system, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+}

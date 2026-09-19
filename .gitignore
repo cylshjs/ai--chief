@@ -1,0 +1,18 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+
+# 前端依赖；app/static 是 npm run build 的产物，都不进版本库
+frontend/node_modules/
+app/static/
+
+# 运行时数据：LangGraph 会话记录
+db/
+
+# 密钥，绝不提交
+.env
+
+# langgraph dev 缓存 / IDE
+.langgraph_api/
+.idea/
