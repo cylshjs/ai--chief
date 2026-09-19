@@ -3,6 +3,7 @@
 拍一张冰箱照片，或者直接报出食材，agent 联网搜菜谱 → 按营养和难度打分排序 → 给出带参考图的建议。
 
 ![界面截图](docs/screenshot.png)
+![推荐结果](docs/screenshot-result.png)
 
 ## 亮点
 
