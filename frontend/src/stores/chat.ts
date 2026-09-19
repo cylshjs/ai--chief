@@ -75,7 +75,7 @@ export const useChatStore = defineStore('chat', () => {
     try {
       const imageUrl = file ? await uploadImage(file) : null
 
-      messages.value.push({ role: 'user', content: message })
+      messages.value.push({ role: 'user', content: message, image_url: imageUrl })
       // 会话的第一句话拿来当标题，这样列表里认得出是哪一顿
       touch(threadId.value, isFirst ? message.slice(0, TITLE_LEN) : undefined)
 

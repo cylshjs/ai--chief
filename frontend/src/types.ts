@@ -9,6 +9,8 @@ export interface ChatRequest {
 export interface ChatMessage {
   role: 'user' | 'assistant'
   content: string
+  /** 用户上传的食材图（OSS 直传后拿到的地址）；assistant 消息恒为 null */
+  image_url?: string | null
 }
 
 /** GET /api/v1/oss/presign 的返回 */

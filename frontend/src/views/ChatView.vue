@@ -78,7 +78,10 @@ async function clear() {
         <el-avatar :size="32" class="who">{{ m.role === 'user' ? '我' : '厨' }}</el-avatar>
         <!-- assistant 走 Markdown 渲染，user 保持纯文本 -->
         <div v-if="m.role === 'assistant'" class="bubble" v-html="render(m.content || '…')" />
-        <div v-else class="bubble">{{ m.content || '…' }}</div>
+        <div v-else class="bubble">
+          <img v-if="m.image_url" :src="m.image_url" class="sent" alt="上传的食材图" />
+          {{ m.content || '…' }}
+        </div>
       </div>
     </el-scrollbar>
 
@@ -157,6 +160,13 @@ async function clear() {
   white-space: pre-wrap;
   background: var(--el-color-primary);
   color: #fff;
+}
+/* 用户发出去的食材图。这个 img 写在模板里，不是 v-html 注入的，不用 :deep() */
+.bubble .sent {
+  display: block;
+  max-width: 100%;
+  border-radius: 6px;
+  margin-bottom: 0.4rem;
 }
 /* v-html 注入的节点没有 scoped 的 data 属性，够不着，必须走 :deep() */
 .bubble :deep(p) {

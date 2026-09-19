@@ -99,6 +99,24 @@ def clear_messages(thread_id: str):
     logger.info(f"清空历史消息，thread_id: {thread_id}")
     checkpointer.delete_thread(thread_id)
 
+def _split_human_content(content) -> dict:
+    """带图消息的 content 是 [{"type":"image","url":...},{"type":"text","text":...}]，
+    拆成前端好渲染的 {content, image_url}；纯文本消息原样返回。
+    不拆的话前端拿到的是个数组，模板里会渲染成一串 [object Object]。"""
+    if isinstance(content, str):
+        return {"content": content, "image_url": None}
+
+    text, image_url = "", None
+    for part in content:
+        if not isinstance(part, dict):
+            continue
+        if part.get("type") == "text":
+            text = part.get("text", "")
+        elif part.get("type") == "image":
+            image_url = part.get("url")
+    return {"content": text, "image_url": image_url}
+
+
 # 查询会话历史
 def get_messages(thread_id: str) -> list[dict[str, str]]:
     """获取会话历史"""
@@ -127,7 +145,7 @@ def get_messages(thread_id: str) -> list[dict[str, str]]:
             continue
 
         if isinstance(msg, HumanMessage):
-            result.append({"role": "user", "content": msg.content})
+            result.append({"role": "user", **_split_human_content(msg.content)})
         elif isinstance(msg, AIMessage):
             result.append({"role": "assistant", "content": msg.content})
 
