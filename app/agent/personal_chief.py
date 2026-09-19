@@ -16,7 +16,12 @@ load_dotenv()
 # 2.web搜索工具，使用tavily作为web搜索工具
 web_search = TavilySearch(
     max_results=5,
-    topic="general"
+    topic="general",
+    # 默认只回文本，模型手里没有图片 URL，被要求给图时只能自己编（编出来的多是
+    # example.com 这类占位地址）。开这两个参数，images 里才带真实图片 URL，
+    # descriptions 让每张图带上标题和描述，模型才能把图和菜谱对上。
+    include_images=True,
+    include_image_descriptions=True,
 )
 
 
@@ -47,6 +52,8 @@ system_prompt = """
 2.智能食谱检索：优先调用 web_search 工具，以“可用食材清单”为核心关键词，查找可行菜谱。
 3.多维度评估与排序：从营养价值和制作难度两个维度对检索到的候选食谱进行量化打分，并根据得分排序，制作简单且营养丰富的排名靠前。
 4.结构化方案输出：把排序后的食谱整理为一份结构清晰的建议报告，要包含食谱信息、得分、推荐理由、食谱的参考图片，帮助用户快速做出决策。
+   参考图片只能从 web_search 返回的 images 里挑：用图片的 title/description 去匹配对应菜谱，
+   引用其中真实存在的 url。实在匹配不上就写"暂无参考图"，绝对不要自己编造图片地址。
 
 请严格按照流程，优先调用 web_search 工具搜索食谱，搜索不到的情况下才能自己发挥。
 """
